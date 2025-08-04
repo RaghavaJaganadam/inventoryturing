@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Lab Inventory{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <p class="text-gray-600">Comprehensive insights into your lab inventory</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Equipment</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="total-equipment">-</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Available</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="available-equipment">-</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">In Use</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="in-use-equipment">-</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Value</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="total-value">-</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Utilization Chart -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Equipment Utilization</h3>
+            <canvas id="utilizationChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Category Distribution</h3>
+            <canvas id="categoryChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Activity Trends -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Activity Trends (30 Days)</h3>
+            <canvas id="activityChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Chip Analysis -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Chip Type Distribution</h3>
+            <canvas id="chipChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Detailed Reports Links -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{{ url_for('analytics.utilization_report') }}" 
+           class="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h4 class="text-lg font-medium text-gray-900">Utilization Report</h4>
+                    <p class="text-sm text-gray-500">Detailed equipment usage analysis</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('analytics.maintenance_report') }}" 
+           class="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h4 class="text-lg font-medium text-gray-900">Maintenance Report</h4>
+                    <p class="text-sm text-gray-500">Equipment maintenance and warranties</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('analytics.valuation_report') }}" 
+           class="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h4 class="text-lg font-medium text-gray-900">Valuation Report</h4>
+                    <p class="text-sm text-gray-500">Financial analysis and asset values</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+{% block extra_js %}
+<script>
+let utilizationChart, categoryChart, activityChart, chipChart;
+
+// Load dashboard data
+async function loadDashboardData() {
+    try {
+        // Load basic stats
+        const statsResponse = await fetch('/api/stats');
+        const stats = await statsResponse.json();
+        
+        document.getElementById('total-equipment').textContent = stats.total_equipment;
+        document.getElementById('available-equipment').textContent = stats.available;
+        document.getElementById('in-use-equipment').textContent = stats.in_use;
+        
+        // Load valuation data
+        const valuationResponse = await fetch('/analytics/api/valuation');
+        const valuation = await valuationResponse.json();
+        document.getElementById('total-value').textContent = '$' + valuation.total_current_value.toLocaleString();
+
+        // Create/destroy charts
+        createUtilizationChart(stats);
+        createCategoryChart(stats.categories);
+
+        // Load additional chart data
+        const trendsResponse = await fetch('/analytics/api/trends');
+        const trends = await trendsResponse.json();
+        createActivityChart(trends);
+
+        const chipResponse = await fetch('/analytics/api/chip-analysis');
+        const chipData = await chipResponse.json();
+        createChipChart(chipData);
+
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
+}
+
+function createUtilizationChart(stats) {
+    if (utilizationChart) utilizationChart.destroy();
+    const ctx = document.getElementById('utilizationChart').getContext('2d');
+    utilizationChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Available', 'In Use', 'Maintenance'],
+            datasets: [{
+                data: [stats.available, stats.in_use, stats.maintenance],
+                backgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createCategoryChart(categories) {
+    if (categoryChart) categoryChart.destroy();
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const labels = Object.keys(categories);
+    const data = Object.values(categories);
+
+    categoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Equipment Count',
+                data: data,
+                backgroundColor: '#3B82F6',
+                borderColor: '#1D4ED8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createActivityChart(trends) {
+    if (activityChart) activityChart.destroy();
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const labels = trends.daily_activity.map(item => new Date(item.date).toLocaleDateString());
+    const data = trends.daily_activity.map(item => item.activity_count);
+
+    activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Daily Activity',
+                data: data,
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createChipChart(chipData) {
+    if (chipChart) chipChart.destroy();
+    const ctx = document.getElementById('chipChart').getContext('2d');
+    const labels = chipData.chip_types.map(item => item.type);
+    const data = chipData.chip_types.map(item => item.count);
+
+    chipChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#EF4444', '#F97316', '#F59E0B', '#10B981',
+                    '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', loadDashboardData);
+</script>
+{% endblock %}
