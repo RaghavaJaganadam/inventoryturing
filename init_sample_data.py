@@ -340,5 +340,12 @@ def init_sample_data():
         print("Email: admin@lab.com")
         print("Password: admin123")
 
+# if __name__ == '__main__':
+#     init_sample_data()
+
 if __name__ == '__main__':
-    init_sample_data()
+    confirm = input("WARNING: This will insert sample data. Type 'yes' to continue: ")
+    if confirm.lower() == 'yes':
+        init_sample_data()
+    else:
+        print("Cancelled.")

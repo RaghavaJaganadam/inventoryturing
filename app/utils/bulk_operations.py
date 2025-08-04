@@ -84,20 +84,34 @@ class BulkOperations:
                 equipment.asset_tag = asset_tag
                 equipment.name = str(getattr(row, 'name', '')).strip()
                 equipment.category = str(getattr(row, 'category', '')).strip()
+                # for field in BulkOperations.OPTIONAL_FIELDS:
+                #     value = getattr(row, field, None)
+                #     # Field-specific conversions
+                #     if field in ['pin_count']:
+                #         value = int(value) if value not in (None, '', pd.NA, np.nan) else None
+                #     elif field in ['purchase_cost', 'current_value']:
+                #         value = float(value) if value not in (None, '', pd.NA, np.nan) else None
+                #     elif field in ['procurement_date', 'warranty_expiry']:
+                #         value = BulkOperations.parse_date(value) if value not in (None, '', pd.NA, np.nan) else None
+                #     elif isinstance(value, str):
+                #         value = value.strip()
+                #     if value in ('', 'NA', pd.NA, np.nan):
+                #         value = None
+                #     setattr(equipment, field, value)
                 for field in BulkOperations.OPTIONAL_FIELDS:
                     value = getattr(row, field, None)
-                    # Field-specific conversions
-                    if field in ['pin_count']:
-                        value = int(value) if value not in (None, '', pd.NA, np.nan) else None
-                    elif field in ['purchase_cost', 'current_value']:
-                        value = float(value) if value not in (None, '', pd.NA, np.nan) else None
-                    elif field in ['procurement_date', 'warranty_expiry']:
-                        value = BulkOperations.parse_date(value) if value not in (None, '', pd.NA, np.nan) else None
+                    if pd.isna(value) or value in ('', 'NA'):
+                        value = None
+                    if field == 'pin_count' and value is not None:
+                        value = int(value)
+                    elif field in ['purchase_cost', 'current_value'] and value is not None:
+                        value = float(value)
+                    elif field in ['procurement_date', 'warranty_expiry'] and value is not None:
+                        value = BulkOperations.parse_date(value)
                     elif isinstance(value, str):
                         value = value.strip()
-                    if value in ('', 'NA', pd.NA, np.nan):
-                        value = None
                     setattr(equipment, field, value)
+
                 equipment_list.append(equipment)
                 results['success'] += 1
 
