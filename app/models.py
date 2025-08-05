@@ -3,6 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
+import pytz
+
+def now_ist():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
 
 # class User(UserMixin, db.Model):
 #     __tablename__ = 'users'
@@ -12,7 +16,7 @@ from app import db
 #     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
 #     password_hash = db.Column(db.String(128), nullable=False)
 #     role = db.Column(db.String(20), nullable=False, default='Researcher')  # Admin, Lab Staff, Researcher, Read-only
-#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#     created_at = db.Column(db.DateTime, default=now_ist)
 #     is_active = db.Column(db.Boolean, default=True)
     
 #     # Relationships
@@ -47,7 +51,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='Researcher')  # Admin, Lab Staff, Researcher, Read-only
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_ist)
     is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
@@ -111,8 +115,8 @@ class Equipment(db.Model):
     # Dates
     procurement_date = db.Column(db.Date)
     warranty_expiry = db.Column(db.Date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_ist)
+    updated_at = db.Column(db.DateTime, default=now_ist, onupdate=now_ist)
     
     # Status and condition
     status = db.Column(db.String(50), nullable=False, default='Available', index=True)  # Available, In Use, Under Maintenance, Retired, Missing
@@ -173,7 +177,7 @@ class MovementLog(db.Model):
     from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=now_ist, index=True)
     notes = db.Column(db.Text)
     
     # Relationships for from/to users
@@ -200,7 +204,7 @@ class AuditLog(db.Model):
     old_values = db.Column(db.Text)  # JSON string of old values
     new_values = db.Column(db.Text)  # JSON string of new values
     
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=now_ist, index=True)
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.Text)
     

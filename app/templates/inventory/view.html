@@ -225,13 +225,13 @@
                         {% if equipment.purchase_cost %}
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Purchase Cost</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ "%.2f"|format(equipment.purchase_cost) }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">${{ "%.2f"|format(equipment.purchase_cost) }}</dd>
                         </div>
                         {% endif %}
                         {% if equipment.current_value %}
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Current Value</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ "%.2f"|format(equipment.current_value) }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">${{ "%.2f"|format(equipment.current_value) }}</dd>
                         </div>
                         {% endif %}
                         {% if equipment.design_files %}
@@ -280,6 +280,7 @@
                     {% if equipment.status == 'Available' and current_user.has_permission('checkout') %}
                     <form hx-post="{{ url_for('inventory.checkout', id=equipment.id) }}" 
                           hx-confirm="Checkout this equipment to yourself?"
+                          hx-target="body"
                           class="w-full">
                         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                             Checkout to Me
@@ -290,6 +291,7 @@
                     {% if equipment.assigned_to_id == current_user.id or (current_user.has_permission('update') and equipment.status == 'In Use') %}
                     <form hx-post="{{ url_for('inventory.checkin', id=equipment.id) }}" 
                           hx-confirm="Check in this equipment?"
+                          hx-target="body"
                           class="w-full">
                         <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                             Check In

@@ -170,16 +170,24 @@
                         </form>
                         {% endif %}
                         
-                        {% if equipment.assigned_to_id == current_user.id or (current_user.has_permission('update') and equipment.status == 'In Use') %}
+                        <!-- {% if equipment.assigned_to_id == current_user.id or (current_user.has_permission('update') and equipment.status == 'In Use') %}
                         <form hx-post="{{ url_for('inventory.checkin', id=equipment.id) }}" 
                               hx-target="#equipment-table"
                               hx-confirm="Check in this equipment?"
-                              class="inline">
+                              class="inline"
+                              hx-indicator="#loading-indicator">
                             <button type="submit" class="text-orange-600 hover:text-orange-900 transition-colors duration-150">
                                 Check In
                             </button>
                         </form>
+                        {% endif %} -->
+                        {% if equipment.assigned_to_id == current_user.id or (current_user.has_permission('update') and equipment.status == 'In Use') %}
+                            <a href="{{ url_for('inventory.view', id=equipment.id) }}"
+                            class="text-orange-600 hover:text-orange-900 transition-colors duration-150 inline-block px-4 py-2">
+                                Check In
+                            </a>
                         {% endif %}
+
                     </div>
                 </td>
             </tr>

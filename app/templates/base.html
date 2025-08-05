@@ -89,7 +89,6 @@
                            class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
                             Analytics
                         </a>
-                        <!-- http://127.0.0.1:5000/analytics/dashboard -->
                         {% if current_user.has_permission('user_management') %}
                         <a href="{{ url_for('auth.register') }}" 
                            class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
@@ -116,10 +115,11 @@
                                name="q"
                                @focus="open = true"
                                @blur="setTimeout(() => open = false, 200)">
-                        <div id="search-results" 
+                         <div id="search-results" 
                              class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar"
                              x-show="open"
-                             style="display: none;"></div>
+                             style="display: none;">
+                            </div>
                     </div>
                     
                     <!-- User menu -->
@@ -213,9 +213,24 @@
             // Show error message
             const errorDiv = document.createElement('div');
             errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
-            errorDiv.innerHTML = 'An error occurred. Please try again.';
+            errorDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>An error occurred. Please try again.</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-sm opacity-70 hover:opacity-100">×</button>
+                </div>
+            `;
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 5000);
+        });
+        
+        // Handle successful operations
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.xhr.status === 200 && evt.detail.pathInfo.requestPath.includes('/checkout/')) {
+                // Refresh the page after successful checkout/checkin from table
+                if (evt.detail.requestConfig.headers['HX-Target'] === 'equipment-table') {
+                    window.location.reload();
+                }
+            }
         });
         
         // Auto-focus first input in forms
@@ -227,190 +242,6 @@
         });
     </script>
 
-
-
-
-    <script>
-    let utilizationChart = null;
-    let categoryChart = null;
-    let activityChart = null;
-    let chipChart = null;
-
-    // Helper (optional): forcibly reset canvas if Chart.js ever complains
-    function resetCanvas(id) {
-        const oldCanvas = document.getElementById(id);
-        if (oldCanvas) {
-            const newCanvas = oldCanvas.cloneNode(false);
-            oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-        }
-    }
-
-    // Load dashboard data
-    async function loadDashboardData() {
-        try {
-            // Load basic stats
-            const statsResponse = await fetch('/api/stats');
-            const stats = await statsResponse.json();
-            
-            document.getElementById('total-equipment').textContent = stats.total_equipment;
-            document.getElementById('available-equipment').textContent = stats.available;
-            document.getElementById('in-use-equipment').textContent = stats.in_use;
-            
-            // Load valuation data
-            const valuationResponse = await fetch('/analytics/api/valuation');
-            const valuation = await valuationResponse.json();
-            document.getElementById('total-value').textContent = '$' + valuation.total_current_value.toLocaleString();
-
-            // Charts
-            createUtilizationChart(stats);
-            createCategoryChart(stats.categories);
-
-            // Load additional chart data
-            const trendsResponse = await fetch('/analytics/api/trends');
-            const trends = await trendsResponse.json();
-            createActivityChart(trends);
-
-            const chipResponse = await fetch('/analytics/api/chip-analysis');
-            const chipData = await chipResponse.json();
-            createChipChart(chipData);
-
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-        }
-    }
-
-    function createUtilizationChart(stats) {
-        if (utilizationChart) {
-            utilizationChart.destroy();
-            utilizationChart = null;
-        }
-        // Optionally reset canvas if you *still* have issues
-        // resetCanvas('utilizationChart');
-        const ctx = document.getElementById('utilizationChart').getContext('2d');
-        utilizationChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Available', 'In Use', 'Maintenance'],
-                datasets: [{
-                    data: [stats.available, stats.in_use, stats.maintenance],
-                    backgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-    }
-
-    function createCategoryChart(categories) {
-        if (categoryChart) {
-            categoryChart.destroy();
-            categoryChart = null;
-        }
-        // resetCanvas('categoryChart');
-        const ctx = document.getElementById('categoryChart').getContext('2d');
-        const labels = Object.keys(categories);
-        const data = Object.values(categories);
-
-        categoryChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Equipment Count',
-                    data: data,
-                    backgroundColor: '#3B82F6',
-                    borderColor: '#1D4ED8',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function createActivityChart(trends) {
-        if (activityChart) {
-            activityChart.destroy();
-            activityChart = null;
-        }
-        // resetCanvas('activityChart');
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        const labels = trends.daily_activity.map(item => new Date(item.date).toLocaleDateString());
-        const data = trends.daily_activity.map(item => item.activity_count);
-
-        activityChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Daily Activity',
-                    data: data,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function createChipChart(chipData) {
-        if (chipChart) {
-            chipChart.destroy();
-            chipChart = null;
-        }
-        // resetCanvas('chipChart');
-        const ctx = document.getElementById('chipChart').getContext('2d');
-        const labels = chipData.chip_types.map(item => item.type);
-        const data = chipData.chip_types.map(item => item.count);
-
-        chipChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: [
-                        '#EF4444', '#F97316', '#F59E0B', '#10B981',
-                        '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
-    }
-
-    // Load data when page loads
-    document.addEventListener('DOMContentLoaded', loadDashboardData);
-    </script>
-    <!-- At the end of base.html -->
     {% block extra_js %}{% endblock %}
-
-
-
-
-
-
 </body>
 </html>

@@ -168,16 +168,52 @@ def get_users():
         } for user in users]
     })
 
+# @api_bp.route('/search', methods=['GET'])
+# @login_required
+# def search():
+#     """Global search across equipment"""
+#     query_term = request.args.get('q', '').strip()
+#     limit = request.args.get('limit', 10, type=int)
+    
+#     if not query_term:
+#         return jsonify({'results': []})
+    
+#     results = Equipment.query.filter(or_(
+#         Equipment.asset_tag.contains(query_term),
+#         Equipment.name.contains(query_term),
+#         Equipment.model_number.contains(query_term),
+#         Equipment.manufacturer.contains(query_term),
+#         Equipment.serial_number.contains(query_term)
+#     )).limit(limit).all()
+    
+#     return jsonify({
+#         'results': [{
+#             'id': eq.id,
+#             'asset_tag': eq.asset_tag,
+#             'name': eq.name,
+#             'category': eq.category,
+#             'status': eq.status,
+#             'location': eq.location
+#         } for eq in results]
+#     })
+
+
+
+from flask import render_template, request, jsonify
+
 @api_bp.route('/search', methods=['GET'])
 @login_required
 def search():
     """Global search across equipment"""
     query_term = request.args.get('q', '').strip()
     limit = request.args.get('limit', 10, type=int)
-    
+
     if not query_term:
+        # For HTMX, render empty result partial; for others, return empty JSON
+        if request.headers.get('HX-Request') == 'true':
+            return render_template('inventory/search_results.html', results=[])
         return jsonify({'results': []})
-    
+
     results = Equipment.query.filter(or_(
         Equipment.asset_tag.contains(query_term),
         Equipment.name.contains(query_term),
@@ -185,7 +221,12 @@ def search():
         Equipment.manufacturer.contains(query_term),
         Equipment.serial_number.contains(query_term)
     )).limit(limit).all()
-    
+
+    # If HTMX, render the HTML partial
+    if request.headers.get('HX-Request') == 'true':
+        return render_template('inventory/search_results.html', results=results)
+
+    # Otherwise, fallback to JSON (for API/AJAX/non-HTMX)
     return jsonify({
         'results': [{
             'id': eq.id,

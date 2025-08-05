@@ -5,6 +5,10 @@ from datetime import datetime, date
 from app import db
 from app.models import Equipment, User, MovementLog, log_audit_event
 import json
+import pytz
+
+def now_ist():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
 
 inventory_bp = Blueprint('inventory', __name__)
 
@@ -68,7 +72,8 @@ def index():
     statuses = ['Available', 'In Use', 'Under Maintenance', 'Retired', 'Missing']
     
     if request.headers.get('HX-Request'):
-        return render_template('inventory/equipment_table.html', 
+        # For table updates, return the full table
+        return render_template('inventory/equipment_table.html',
                              equipment_list=equipment_list,
                              current_user=current_user)
     
@@ -334,7 +339,7 @@ def edit(id):
                 equipment.tags = None
             
             equipment.notes = request.form.get('notes', '').strip() or None
-            equipment.updated_at = datetime.utcnow()
+            equipment.updated_at = now_ist()
             
             db.session.commit()
             
@@ -471,6 +476,8 @@ def checkin(id):
     
     if equipment.assigned_to_id != current_user.id and not current_user.has_permission('update'):
         flash('You can only check in equipment assigned to you', 'error')
+        if request.headers.get('HX-Request'):
+            return '', 403
         return redirect(url_for('inventory.view', id=id))
     
     try:
@@ -505,8 +512,19 @@ def checkin(id):
         
         flash(f'Equipment {equipment.asset_tag} checked in successfully', 'success')
         
+        # Handle HTMX requests differently based on context
+        if request.headers.get('HX-Request'):
+            # If coming from equipment table, refresh the table
+            if request.headers.get('HX-Target') == 'equipment-table':
+                return redirect(url_for('inventory.index'))
+            # If coming from view page, redirect to view page
+            else:
+                return '', 200, {'HX-Redirect': url_for('inventory.view', id=equipment.id)}
+        
     except Exception as e:
         db.session.rollback()
         flash(f'Error checking in equipment: {str(e)}', 'error')
+        if request.headers.get('HX-Request'):
+            return '', 500
     
     return redirect(url_for('inventory.view', id=id))
