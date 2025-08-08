@@ -280,8 +280,7 @@ import pandas as pd
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response, session, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.utils.bulk_operations import BulkOperations, BulkImportError
-from app.utils.backup_manager import BackupManager
+from app.utils.bulk_operations import BulkOperations
 
 bulk_bp = Blueprint('bulk', __name__)
 
@@ -490,46 +489,3 @@ def download_template_excel():
     except Exception as e:
         flash(f"Template generation failed: {str(e)}", 'error')
         return redirect(url_for('bulk.bulk_import'))
-
-
-
-
-
-@bulk_bp.route('/backup', methods=['GET', 'POST'])
-@login_required
-def backup_management():
-    if not current_user.has_permission('user_management'):  # Only admins
-        flash('You do not have permission to manage backups', 'error')
-        return redirect(url_for('inventory.index'))
-
-    backup_manager = BackupManager()
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-        if action == 'create':
-            backup_type = request.form.get('backup_type', 'full')
-            try:
-                result = backup_manager.create_backup(backup_type)
-                flash(f"Backup created successfully: {result['backup_file']}", 'success')
-            except Exception as e:
-                flash(f"Backup failed: {str(e)}", 'error')
-
-        elif action == 'cleanup':
-            try:
-                removed_count = backup_manager.cleanup_old_backups()
-                flash(f"Cleaned up {removed_count} old backups", 'success')
-            except Exception as e:
-                flash(f"Cleanup failed: {str(e)}", 'error')
-
-        elif action == 'restore':
-            backup_filename = request.form.get('backup_filename')
-            if backup_filename:
-                try:
-                    result = backup_manager.restore_backup(backup_filename)
-                    flash(f"Database restored successfully from {backup_filename}", 'success')
-                except Exception as e:
-                    flash(f"Restore failed: {str(e)}", 'error')
-
-    backups = backup_manager.list_backups()
-    return render_template('bulk/backup.html', backups=backups)

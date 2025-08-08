@@ -14,10 +14,6 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_FOLDER = 'uploads'
     
-    # Backup settings
-    BACKUP_DIR = 'backups'
-    BACKUP_RETENTION_DAYS = 30
-    
 class DevelopmentConfig(Config):
     DEBUG = True
     
